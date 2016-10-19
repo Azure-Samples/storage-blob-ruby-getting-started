@@ -68,6 +68,9 @@ class BlobAdvancedSamples
     puts "\n\n* Blob metadata*\n"
     blob_metadata(blob_service)
 
+    puts "\n\n* Blob lease*\n"
+    blob_lease(blob_service)
+
     puts "\n\nAzure Storage Blob advanced sample - Completed."
 
   rescue Azure::Core::Http::HTTPError => ex
@@ -397,5 +400,38 @@ class BlobAdvancedSamples
     blob_service.delete_container(container_name)
 
     puts 'Blob metadata sample completed'
+  end
+
+  def blob_lease(blob_service)
+    file_to_upload = 'HelloWorld.png'
+    blob_name = file_to_upload
+    container_name = 'blobcontainer' + RandomString.random_name
+
+    # Create a new container
+    puts "Create a container with name #{container_name}"
+
+    blob_service.create_container(container_name)
+
+    puts 'Create blob'
+    blob_service.create_block_blob(container_name, blob_name,
+                                   IO.binread(File.expand_path(file_to_upload)))
+
+    puts 'Acquire blob lease'
+    lease_id = blob_service.acquire_blob_lease(container_name, blob_name)
+
+    begin
+      puts 'Try delete blob without specifying lease'
+      blob_service.delete_blob(container_name, blob_name)
+    rescue
+      puts 'Unable to delete blob without specifying lease'
+    end
+
+    puts 'Release blob lease'
+    blob_service.release_blob_lease(container_name, blob_name, lease_id)
+
+    puts 'Delete container'
+    blob_service.delete_container(container_name)
+
+    puts 'Blob lease sample completed'
   end
 end
