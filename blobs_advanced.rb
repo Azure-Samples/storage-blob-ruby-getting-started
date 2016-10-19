@@ -59,6 +59,9 @@ class BlobAdvancedSamples
     puts "\n\n* Container access policy*\n"
     container_acl(blob_service)
 
+    puts "\n\n* Container lease*\n"
+    container_lease(blob_service)
+
     puts "\n\n* Blob properties*\n"
     blob_properties(blob_service)
 
@@ -292,6 +295,33 @@ class BlobAdvancedSamples
     blob_service.delete_container(container_name)
 
     puts 'Container acl sample completed'
+  end
+
+  def container_lease(blob_service)
+    container_name = 'blobcontainer' + RandomString.random_name
+
+    # Create a new container
+    puts "Create a container with name #{container_name}"
+
+    blob_service.create_container(container_name)
+
+    puts 'Acquire container lease'
+    lease_id = blob_service.acquire_container_lease container_name
+
+    begin
+        puts 'Try to delete container without specifying lease'
+        blob_service.delete_container(container_name)
+    rescue
+      puts 'Container delete operation failed without specifying lease'
+    end
+
+    puts 'Release container lease'
+    blob_service.release_container_lease container_name, lease_id
+
+    puts 'Delete container'
+    blob_service.delete_container(container_name)
+
+    puts 'Container lease sample completed'
   end
 
   def blob_properties(blob_service)
